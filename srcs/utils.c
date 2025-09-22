@@ -16,7 +16,7 @@ void	resolve_target(t_traceroute *t, const char *target)
 
 	if (getaddrinfo(target, NULL, &hints, &res) != 0)
 	{
-		perror("getaddrinfo");
+		printf("Error resolving IP address, make sure the format is correct");
 		exit(1);
 	}
 	t->dest_addr = *(struct sockaddr_in *)res->ai_addr;

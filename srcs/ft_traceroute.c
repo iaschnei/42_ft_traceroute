@@ -165,8 +165,7 @@ void	run_traceroute(t_traceroute *t, int max_ttl, int probes, int resolve_dns, i
 	char sendbuf[52];
 	char recvbuf[512];
 	struct timeval start, end;
-	fd_set readfds;
-	struct icmp *icmp_hdr;
+	fd_set readfds; 
 	int ttl, probe;
 
 
