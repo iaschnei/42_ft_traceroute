@@ -23,7 +23,7 @@ COLOR_BLUE	=	\033[3;36m
 COLOR_PURP	=	\033[1;35m
 COLOR_END	=	\033[0m
 
-%.o: %.cpp
+%.o: %.c
 	@$(CC) $(FLAGS) -I $(INCL) -g -c $< -o $@
 	@echo "$(COLOR_BLUE) || Compiling ($<)...$(COLOR_END)"
 

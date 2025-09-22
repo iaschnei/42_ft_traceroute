@@ -14,14 +14,45 @@
     1st hop is probably a home router
     3rd hop is the final destination
 
+
+	------------------------------------------------------------------------------
+  	Example Usage:
+
+    ./ft_traceroute google.com
+      → Traces the route to google.com using default settings (30 hops max, 3 probes)
+
+    ./ft_traceroute -m 20 -q 5 -p 40000 google.com
+      → Traces the route to google.com with:
+         - Maximum TTL of 20
+         - 5 probes per hop
+         - Starting destination port 40000
+
+    ./ft_traceroute -n google.com
+      → Traces without performing reverse DNS (shows only IPs)
+
+    ./ft_traceroute --help
+      → Prints usage and exits
+
+	------------------------------------------------------------------------------
+
+	Bonuses:
+
+    DNS management   Reverse DNS resolution	(resolve hostname from IP)
+    -m <max_ttl>     Set the maximum TTL (Time-To-Live) [default: 30]
+    -q <probes>      Number of probe packets per hop [default: 3]
+    -n               Disable reverse DNS lookup (show only IPs)
+    -p <port>        Starting UDP destination port [default: 33434]
+
+	------------------------------------------------------------------------------
+
 */
 
 int	main(int argc, char **argv)
 {
 	t_traceroute	t;
-	int max_ttl = MAX_TTL;
-	int probes = PROBES;
-    int resolve_dns = 1;
+	int max_ttl = MAX_TTL;	// Default max TTL (30)
+	int probes = PROBES;    // Default number of probes per loop (3)
+    int resolve_dns = 1;    // DNS resolution yes/no
     int base_port = 33434;  // Default port
 	int i = 1;
 
@@ -83,6 +114,7 @@ int	main(int argc, char **argv)
 
 	close(t.sock_send);
 	close(t.sock_recv);
+	free(t.target);
 	return (0);
 }
 
@@ -91,24 +123,6 @@ void	print_help(void)
 	printf("Usage: ./ft_traceroute [--help] <hostname/IP>\n");
 	printf("Simple implementation of traceroute (IPv4 only)\n");
 	exit(0);
-}
-
-void	resolve_target(t_traceroute *t, const char *target)
-{
-	struct addrinfo hints, *res;
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_DGRAM;
-
-	if (getaddrinfo(target, NULL, &hints, &res) != 0)
-	{
-		perror("getaddrinfo");
-		exit(1);
-	}
-	t->dest_addr = *(struct sockaddr_in *)res->ai_addr;
-	t->target = strdup(target);
-	freeaddrinfo(res);
 }
 
 void	print_result(int ttl, t_probe_result *results, int probes)
@@ -134,7 +148,7 @@ void	print_result(int ttl, t_probe_result *results, int probes)
 		return;
 	}
 
-	for (i = 0; i < PROBES; i++)
+	for (i = 0; i < probes; i++)
 	{
 		if (results[i].received)
 			printf("  %6.3f ms", results[i].rtt);
@@ -143,7 +157,6 @@ void	print_result(int ttl, t_probe_result *results, int probes)
 	}
 	printf("\n");
 }
-
 
 void	run_traceroute(t_traceroute *t, int max_ttl, int probes, int resolve_dns, int base_port)
 {
@@ -171,6 +184,8 @@ void	run_traceroute(t_traceroute *t, int max_ttl, int probes, int resolve_dns, i
     // Loop X times
 	for (ttl = 1; ttl <= max_ttl; ttl++)
 	{
+
+		// Set TTL value on socket
 		if (setsockopt(t->sock_send, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0)
 		{
 			perror("setsockopt");
@@ -187,7 +202,7 @@ void	run_traceroute(t_traceroute *t, int max_ttl, int probes, int resolve_dns, i
 
             // Send a UDP packet to destination with current TTL
 			gettimeofday(&start, NULL);
-		    t->dest_addr.sin_port = htons(base_port + (ttl - 1) * PROBES + probe);
+		    t->dest_addr.sin_port = htons(base_port + (ttl - 1) * probes + probe);
 
             if (sendto(t->sock_send, sendbuf, sizeof(sendbuf), 0,
                 (struct sockaddr *)&t->dest_addr, sizeof(t->dest_addr)) < 0) {
