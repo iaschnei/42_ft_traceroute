@@ -6,7 +6,7 @@ double	time_diff_ms(struct timeval start, struct timeval end)
 			(end.tv_usec - start.tv_usec) / 1000.0);
 }
 
-void	resolve_target(t_traceroute *t, const char *target)
+int	resolve_target(t_traceroute *t, const char *target)
 {
 	struct addrinfo hints, *res;
 
@@ -17,9 +17,10 @@ void	resolve_target(t_traceroute *t, const char *target)
 	if (getaddrinfo(target, NULL, &hints, &res) != 0)
 	{
 		printf("Error resolving IP address, make sure the format is correct");
-		exit(1);
+		return (1);
 	}
 	t->dest_addr = *(struct sockaddr_in *)res->ai_addr;
 	t->target = strdup(target);
 	freeaddrinfo(res);
+    return (0);
 }

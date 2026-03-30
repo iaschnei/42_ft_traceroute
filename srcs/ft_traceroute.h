@@ -10,6 +10,7 @@
 # include <sys/time.h>
 # include <netinet/in.h>
 # include <netinet/ip_icmp.h>
+# include <netinet/udp.h>
 # include <netdb.h>
 # include <arpa/inet.h>
 # include <errno.h>
@@ -39,8 +40,8 @@ typedef struct s_traceroute {
 
 
 void	print_help(void);
-void run_traceroute(t_traceroute *t, int max_ttl, int probes, int resolve_dns, int base_port);
-void	resolve_target(t_traceroute *t, const char *target);
+int     run_traceroute(t_traceroute *t, int max_ttl, int probes, int resolve_dns, int base_port);
+int 	resolve_target(t_traceroute *t, const char *target);
 double	time_diff_ms(struct timeval start, struct timeval end);
 
 #endif
